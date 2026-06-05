@@ -8,6 +8,7 @@ from gymnasium.wrappers import TimeLimit
 import sys
 import os
 import wandb
+import numpy as np
 
 import panda_mujoco_gym  # 注册环境
 print(panda_mujoco_gym.__file__)
@@ -111,7 +112,7 @@ eval_callback = CustomEvalCallback(
 model.learn(
     total_timesteps=1000000,
     callback=eval_callback,
-    tb_log_name="tqc_franka_push"
+    tb_log_name="tqc_franka_slide_sparse"
 )
-model.save("tqc_franka_push_final")
+model.save("tqc_franka_slide_sparse_final")
 run.finish()

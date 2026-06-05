@@ -26,7 +26,7 @@ def make_env(reward_type="sparse"):
 test_env = DummyVecEnv([lambda: make_env()])
 
 # 加载模型（必须传入环境）
-model = TQC.load("tqc_franka_push_final", env=test_env)
+model = TQC.load("tqc_franka_pick_and_place_sparse_final", env=test_env)
 
 # 运行测试
 n_episodes = 20
