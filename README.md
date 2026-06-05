@@ -1,23 +1,5 @@
 # Panda RL Training and Hyperparameters
 
-## File Structure
-You can view the train and test files in the `panda_rl` folder. The relevant directory structure is as follows:
-```
-src/
-│ —— panda_mujoco_gym/
-│   │   ├── __init__.py
-│   │   └──...  
-│ ── panda_rl/
-│       └── PushSparse/
-│           └── TQC/
-│               └── train_.py
-│               └── test_.py
-│           └── SAC/
-│               └── train_.py
-│               └── test_.py
-│   │   ├── __init__.py
-```
-
 ## WandB Setup
 I used wandb to record the success rate of each training. Remember to change the `entity` and `project` in the `train` file to your own name.
 
