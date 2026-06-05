@@ -4,7 +4,7 @@ os.environ["MUJOCO_GL"] = "glfw"  # 切换到 glfw 渲染，可在窗口显示�
 import gymnasium as gym
 from sb3_contrib import TQC
 import numpy as np
-import panda_mujoco_gym
+from .... import panda_mujoco_gym  # 注册环境
 from stable_baselines3.common.vec_env import DummyVecEnv
 import time  # 用于控制渲染帧率
 
@@ -17,8 +17,8 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
         return obs, reward, terminated, truncated, info
 
 # 创建与训练完全一致的环境，添加 render_mode 参数
-def make_env(reward_type="dense"):
-    env = gym.make("FrankaPushDense-v0", reward_type=reward_type, render_mode="human")
+def make_env(reward_type="sparse"):
+    env = gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type, render_mode="human")
     env = TerminateOnTruncatedWrapper(env)
     return env
 
@@ -26,7 +26,7 @@ def make_env(reward_type="dense"):
 test_env = DummyVecEnv([lambda: make_env()])
 
 # 加载模型（必须传入环境）
-model = TQC.load("tqc_franka_push_dense_final", env=test_env)
+model = TQC.load("tqc_franka_pick_and_place_sparse_final", env=test_env)
 
 # 运行测试
 n_episodes = 20

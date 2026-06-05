@@ -10,7 +10,7 @@ import os
 import wandb
 import numpy as np
 
-import panda_mujoco_gym  # 注册环境
+from .... import panda_mujoco_gym  # 注册环境
 print(panda_mujoco_gym.__file__)
 
 # 自定义包装器
@@ -21,16 +21,16 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
             terminated = True
         return obs, reward, terminated, truncated, info
 
-# 注册环境
-if "FrankaPickAndPlaceDense-v0" not in gym.envs.registry:
-    gym.register(
-        id="FrankaPickAndPlaceDense-v0",
-        entry_point="panda_mujoco_gym.envs.pick_and_place:FrankaPickAndPlaceEnv",
-        max_episode_steps=1000000,
-    )
+# # 注册环境
+# if "FrankaSlideDense-v0" not in gym.envs.registry:
+#     gym.register(
+#         id="FrankaSlideDense-v0",
+#         entry_point="panda_mujoco_gym.envs.slide:FrankaSlideEnv",
+#         max_episode_steps=1000000,
+#     )
 
 reward_type = "dense"
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceDense-v0", reward_type=reward_type))])
+env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaSlideDense-v0", reward_type=reward_type))])
 
 # 初始化 wandb
 run = wandb.init(
@@ -40,9 +40,9 @@ run = wandb.init(
         "policy": "MultiInputPolicy",
         "learning_rate": 0.001,
         "buffer_size": 1_000_000,
-        "batch_size": 512,
+        "batch_size": 2048,
         "learning_starts": 2000,
-        "policy_kwargs": {"net_arch": [256, 256, 256], "n_critics": 2},
+        "policy_kwargs": {"net_arch": [512, 512, 512], "n_critics": 2},
         "replay_buffer_class": "HerReplayBuffer",
         "replay_buffer_kwargs": {"n_sampled_goal": 4, "goal_selection_strategy": "future"},
         "tau": 0.05,
@@ -57,9 +57,9 @@ model = TQC(
     env=env,
     learning_rate=0.001,
     buffer_size=1_000_000,
-    batch_size=512,
+    batch_size=2048,
     learning_starts=2000,
-    policy_kwargs=dict(net_arch=[256, 256, 256], n_critics=2),
+    policy_kwargs=dict(net_arch=[512, 512, 512], n_critics=2),
     replay_buffer_class=HerReplayBuffer,
     replay_buffer_kwargs=dict(n_sampled_goal=4, goal_selection_strategy="future"),
     tau=0.05,
@@ -99,7 +99,7 @@ class CustomEvalCallback(EvalCallback):
 
         return result
 
-eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceDense-v0", reward_type=reward_type)), "./eval_logs")])
+eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaSlideDense-v0", reward_type=reward_type)), "./eval_logs")])
 eval_callback = CustomEvalCallback(
     eval_env,
     best_model_save_path="./best_model/",
@@ -110,9 +110,9 @@ eval_callback = CustomEvalCallback(
 )
 
 model.learn(
-    total_timesteps=500_000,
+    total_timesteps=1000000,
     callback=eval_callback,
-    tb_log_name="tqc_franka_pick_and_place_dense"
+    tb_log_name="tqc_franka_slide_dense"
 )
-model.save("tqc_franka_pick_and_place_dense_final")
+model.save("tqc_franka_slide_dense_final")
 run.finish()

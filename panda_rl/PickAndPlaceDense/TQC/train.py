@@ -1,40 +1,36 @@
 import gymnasium as gym
-from stable_baselines3 import SAC
+from sb3_contrib import TQC
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.her import HerReplayBuffer
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import EvalCallback
-import wandb
+from gymnasium.wrappers import TimeLimit
 import sys
 import os
+import wandb
 import numpy as np
 
-import panda_mujoco_gym  # 注册环境
+from .... import panda_mujoco_gym  # 注册环境
+print(panda_mujoco_gym.__file__)
 
-print(panda_mujoco_gym.__file__)  # 应该显示包的实际路径
-
-
-# 自定义 TerminateOnTruncatedWrapper 包装器
+# 自定义包装器
 class TerminateOnTruncatedWrapper(gym.Wrapper):
     def step(self, action):
-        observation, reward, terminated, truncated, info = self.env.step(action)
+        obs, reward, terminated, truncated, info = self.env.step(action)
         if truncated:
             terminated = True
-        return observation, reward, terminated, truncated, info
+        return obs, reward, terminated, truncated, info
 
+# # 注册环境
+# if "FrankaPickAndPlaceDense-v0" not in gym.envs.registry:
+#     gym.register(
+#         id="FrankaPickAndPlaceDense-v0",
+#         entry_point="panda_mujoco_gym.envs.pick_and_place:FrankaPickAndPlaceEnv",
+#         max_episode_steps=1000000,
+#     )
 
-# 使用 gymnasium 注册环境
-if "FrankaSlideSparse-v0" not in gym.envs.registry:
-    gym.register(
-        id="FrankaSlideSparse-v0",
-        entry_point="panda_mujoco_gym.envs.slide:FrankaSlideEnv",
-        max_episode_steps=1000000,
-    )
-
-reward_type = "sparse"  # 根据实际情况设置 reward_type 的值
-
-# 使用包装器包装环境
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaSlideSparse-v0", reward_type=reward_type))])
+reward_type = "dense"
+env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceDense-v0", reward_type=reward_type))])
 
 # 初始化 wandb
 run = wandb.init(
@@ -43,34 +39,33 @@ run = wandb.init(
     config={
         "policy": "MultiInputPolicy",
         "learning_rate": 0.001,
-        "buffer_size": 1000000,
-        "batch_size": 2048,
-        "policy_kwargs": {"net_arch": [512, 512, 512]},
+        "buffer_size": 1_000_000,
+        "batch_size": 512,
+        "learning_starts": 2000,
+        "policy_kwargs": {"net_arch": [256, 256, 256], "n_critics": 2},
         "replay_buffer_class": "HerReplayBuffer",
         "replay_buffer_kwargs": {"n_sampled_goal": 4, "goal_selection_strategy": "future"},
         "tau": 0.05,
         "gamma": 0.95,
         "verbose": 1,
-        "ent_coef": 'auto'
+        "top_quantiles_to_drop_per_net": 2
     }
 )
 
-model = SAC(
-    "MultiInputPolicy",
-    env,
+model = TQC(
+    policy="MultiInputPolicy",
+    env=env,
     learning_rate=0.001,
-    buffer_size=1000000,
-    batch_size=2048,
-    policy_kwargs=dict(net_arch=[512, 512, 512]),
+    buffer_size=1_000_000,
+    batch_size=512,
+    learning_starts=2000,
+    policy_kwargs=dict(net_arch=[256, 256, 256], n_critics=2),
     replay_buffer_class=HerReplayBuffer,
-    replay_buffer_kwargs=dict(
-        n_sampled_goal=4,
-        goal_selection_strategy="future",
-    ),
+    replay_buffer_kwargs=dict(n_sampled_goal=4, goal_selection_strategy="future"),
     tau=0.05,
     gamma=0.95,
     verbose=1,
-    ent_coef='auto'
+    top_quantiles_to_drop_per_net=2
 )
 
 
@@ -104,11 +99,8 @@ class CustomEvalCallback(EvalCallback):
 
         return result
 
-# 创建评估回调
-eval_env = DummyVecEnv([lambda: Monitor(
-    TerminateOnTruncatedWrapper(gym.make("FrankaSlideSparse-v0", reward_type=reward_type)), "./eval_logs")])
-
-eval_callback = EvalCallback(
+eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceDense-v0", reward_type=reward_type)), "./eval_logs")])
+eval_callback = CustomEvalCallback(
     eval_env,
     best_model_save_path="./best_model/",
     eval_freq=2000,
@@ -117,12 +109,10 @@ eval_callback = EvalCallback(
     render=False,
 )
 
-# 开始训练
 model.learn(
-    total_timesteps=1000000,
+    total_timesteps=500_000,
     callback=eval_callback,
-    tb_log_name="sac_franka_slide_sparse"
+    tb_log_name="tqc_franka_pick_and_place_dense"
 )
-
-# 保存最终模型
-model.save("sac_franka_slide_sparse_final")
+model.save("tqc_franka_pick_and_place_dense_final")
+run.finish()

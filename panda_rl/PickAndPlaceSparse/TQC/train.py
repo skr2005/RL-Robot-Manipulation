@@ -10,7 +10,7 @@ import os
 import wandb
 import numpy as np
 
-import panda_mujoco_gym  # 注册环境
+from .... import panda_mujoco_gym  # 注册环境
 print(panda_mujoco_gym.__file__)
 
 # 自定义包装器
@@ -21,21 +21,21 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
             terminated = True
         return obs, reward, terminated, truncated, info
 
-# 注册环境
-if "FrankaPushDense-v0" not in gym.envs.registry:
-    gym.register(
-        id="FrankaPushDense-v0",
-        entry_point="panda_mujoco_gym.envs.push:FrankaPushEnv",
-        max_episode_steps=1000000,
-    )
+# # 注册环境
+# if "FrankaPickAndPlaceSparse-v0" not in gym.envs.registry:
+#     gym.register(
+#         id="FrankaPickAndPlaceSparse-v0",
+#         entry_point="panda_mujoco_gym.envs.pick_and_place:FrankaPickAndPlaceEnv",
+#         max_episode_steps=1000000,
+#     )
 
-reward_type = "dense"
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPushDense-v0", reward_type=reward_type))])
+reward_type = "sparse"
+env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type))])
 
 # 初始化 wandb
 run = wandb.init(
     entity="***",
-    project="**",
+    project="***",
     config={
         "policy": "MultiInputPolicy",
         "learning_rate": 0.001,
@@ -99,7 +99,7 @@ class CustomEvalCallback(EvalCallback):
 
         return result
 
-eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaPushDense-v0", reward_type=reward_type)), "./eval_logs")])
+eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type)), "./eval_logs")])
 eval_callback = CustomEvalCallback(
     eval_env,
     best_model_save_path="./best_model/",
@@ -112,7 +112,7 @@ eval_callback = CustomEvalCallback(
 model.learn(
     total_timesteps=500_000,
     callback=eval_callback,
-    tb_log_name="tqc_franka_push_dense"
+    tb_log_name="tqc_franka_pick_and_place_sparse"
 )
-model.save("tqc_franka_push_dense_final")
+model.save("tqc_franka_pick_and_place_sparse_final")
 run.finish()

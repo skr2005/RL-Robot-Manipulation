@@ -9,7 +9,7 @@ import sys
 import os
 import numpy as np
 
-import panda_mujoco_gym  # 注册环境
+from .... import panda_mujoco_gym  # 注册环境
 
 print(panda_mujoco_gym.__file__)  # 应该显示包的实际路径
 
@@ -23,18 +23,18 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
         return observation, reward, terminated, truncated, info
 
 
-# 使用 gymnasium 注册环境
-if "FrankaPickAndPlaceSparse-v0" not in gym.envs.registry:
-    gym.register(
-        id="FrankaPickAndPlaceSparse-v0",
-        entry_point="panda_mujoco_gym.envs.pick_and_place:FrankaPickAndPlaceEnv",
-        max_episode_steps=1000000,
-    )
+# # 使用 gymnasium 注册环境
+# if "FrankaPushSparse-v0" not in gym.envs.registry:
+#     gym.register(
+#         id="FrankaPushSparse-v0",
+#         entry_point="panda_mujoco_gym.envs.push:FrankaPushEnv",
+#         max_episode_steps=1000000,
+#     )
 
 reward_type = "sparse"  # 根据实际情况设置 reward_type 的值
 
 # 使用包装器包装环境
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type))])
+env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPushSparse-v0", reward_type=reward_type))])
 
 # 初始化 wandb
 run = wandb.init(
@@ -106,7 +106,7 @@ class CustomEvalCallback(EvalCallback):
 
 # 创建评估回调
 eval_env = DummyVecEnv([lambda: Monitor(
-    TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type)), "./eval_logs")])
+    TerminateOnTruncatedWrapper(gym.make("FrankaPushSparse-v0", reward_type=reward_type)), "./eval_logs")])
 
 eval_callback = EvalCallback(
     eval_env,
@@ -121,8 +121,8 @@ eval_callback = EvalCallback(
 model.learn(
     total_timesteps=500000,
     callback=eval_callback,
-    tb_log_name="sac_franka_pick_and_place_sparse"
+    tb_log_name="sac_franka_push_sparse"
 )
 
 # 保存最终模型
-model.save("sac_franka_pick_and_place_sparse_final")
+model.save("sac_franka_push_sparse_final")
