@@ -1,4 +1,5 @@
 .vscode
+.venv
 .history
 .pytest_cache
 *__pycache__
