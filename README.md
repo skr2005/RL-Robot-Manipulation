@@ -1,9 +1,13 @@
 # Panda RL Training and Hyperparameters
 
 ## WandB Setup
+
 I used wandb to record the success rate of each training. Remember to change the `entity` and `project` in the `train` file to your own name.
 
+To inspect `.wandb` file locally one option is <https://github.com/matomatical/wunderbar>.
+
 ## Hyperparameters for Off - Policy Algorithms
+
 The following table shows the hyperparameters used for the training of all off - policy algorithms:
 
 | Parameter | Value |
@@ -30,6 +34,7 @@ The following table shows the hyperparameters used for the training of all off -
 **Note**: For `Action size` and `Observation size`, the initial values are 4 and 19 respectively, which means that you do not need to modify them according to different tasks. 
 
 ## Success Rate Comparison of TQC+HER and SAC+HER
+
 | Environment                   | TQC+HER | SAC+HER |
 | ----------------------------- | ------- | ------- |
 | FrankaPushSparse - v0         | 100.00% | 73.33%  |
