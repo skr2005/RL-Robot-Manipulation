@@ -6,5 +6,4 @@ sb3-contrib==2.2.1
 wandb==0.27.1
 numpy==1.23.5
 pytest==9.0.3
-wunderbar==0.0.3
 matplotlib==3.10.9
