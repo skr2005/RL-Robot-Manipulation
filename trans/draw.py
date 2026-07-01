@@ -2,7 +2,8 @@ from pathlib import Path
 import csv
 import numpy as np
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
@@ -41,23 +42,23 @@ def smooth_values(y_values):
         window -= 1
     weights = np.ones(window, dtype=float) / window
     pad = window // 2
-    padded = np.pad(y, pad_width=pad, mode='edge')
-    return np.convolve(padded, weights, mode='valid')
+    padded = np.pad(y, pad_width=pad, mode="edge")
+    return np.convolve(padded, weights, mode="valid")
 
 
 def plot_xy(x, y, title, save_path: Path):
     smoothed = smooth_values(y)
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(x, y, color='gray', alpha=0.3, linewidth=1)
-    ax.plot(x, smoothed, color='tab:blue', linewidth=2, label='smoothed')
+    ax.plot(x, y, color="gray", alpha=0.3, linewidth=1)
+    ax.plot(x, smoothed, color="tab:blue", linewidth=2, label="smoothed")
     if len(x) > 0:
         step = max(1, len(x) // 60)
-        ax.scatter(x[::step], smoothed[::step], color='tab:blue', s=20)
-    ax.set_xlabel('total_timesteps')
-    ax.set_ylabel('success_rate')
+        ax.scatter(x[::step], smoothed[::step], color="tab:blue", s=20)
+    ax.set_xlabel("total_timesteps")
+    ax.set_ylabel("success_rate")
     ax.set_title(title)
     ax.set_ylim(-0.01, 1.01)
-    ax.grid(True, linestyle='--', alpha=0.5)
+    ax.grid(True, linestyle="--", alpha=0.5)
     ax.legend()
     fig.tight_layout()
     fig.savefig(save_path, dpi=150)
@@ -90,5 +91,5 @@ def main():
         print(f"Saved plot to: {out_png}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

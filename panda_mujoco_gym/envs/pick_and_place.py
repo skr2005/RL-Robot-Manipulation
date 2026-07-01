@@ -1,7 +1,9 @@
 import os
 from .panda_env import FrankaEnv
 
-MODEL_XML_PATH = os.path.join(os.path.dirname(__file__), "../assets/", "pick_and_place.xml")
+MODEL_XML_PATH = os.path.join(
+    os.path.dirname(__file__), "../assets/", "pick_and_place.xml"
+)
 
 
 class FrankaPickAndPlaceEnv(FrankaEnv):

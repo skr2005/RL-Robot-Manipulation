@@ -41,7 +41,9 @@ def _find_success_in_text(text: str):
     if not text:
         return None
     # try patterns like 'success_rate 0.75' or 'success_rate: 75.0%'
-    m = re.search(r"success[_/ ]*rate[^0-9\-+\.eE%]*([-+]?\d+(?:\.\d+)?)(%)?", text, re.IGNORECASE)
+    m = re.search(
+        r"success[_/ ]*rate[^0-9\-+\.eE%]*([-+]?\d+(?:\.\d+)?)(%)?", text, re.IGNORECASE
+    )
     if m:
         val = float(m.group(1))
         if m.group(2) == "%":
@@ -69,13 +71,13 @@ def _find_timesteps_in_text(text: str):
     # fallback: look for a standalone 'total_timesteps' line followed by a number in the same block
     lines = text.splitlines()
     for i, line in enumerate(lines):
-        if 'total_timesteps' in line.lower():
+        if "total_timesteps" in line.lower():
             # try to find number in same line
             m3 = re.search(r"([0-9]+)", line)
             if m3:
                 return int(m3.group(1))
             # else check next few lines
-            for j in range(i+1, min(i+4, len(lines))):
+            for j in range(i + 1, min(i + 4, len(lines))):
                 m4 = re.search(r"([0-9]+)", lines[j])
                 if m4:
                     return int(m4.group(1))
@@ -124,7 +126,11 @@ def process_input(input_path: Path):
                     pending_success = None
             succ = _find_success_value(item)
             if succ is not None:
-                ts_for_pair = int(item.get("total_timesteps", last_ts)) if ("total_timesteps" in item or last_ts is not None) else None
+                ts_for_pair = (
+                    int(item.get("total_timesteps", last_ts))
+                    if ("total_timesteps" in item or last_ts is not None)
+                    else None
+                )
                 if ts_for_pair is not None:
                     x_list.append(int(ts_for_pair))
                     y_list.append(float(succ))
@@ -145,7 +151,9 @@ def process_input(input_path: Path):
             writer.writerow(["total_timesteps", "success_rate"])
             for a, b in pairs:
                 writer.writerow([a, b])
-        print(f"saved parsed JSON and xy CSV/JSON for {prefix}: {parsed_path}, {csv_path}")
+        print(
+            f"saved parsed JSON and xy CSV/JSON for {prefix}: {parsed_path}, {csv_path}"
+        )
     else:
         print(f"no (total_timesteps, success) pairs found for {prefix}")
 

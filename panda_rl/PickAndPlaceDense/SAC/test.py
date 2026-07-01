@@ -1,4 +1,5 @@
 import os
+
 os.environ["MUJOCO_GL"] = "glfw"  # 切换到 glfw 渲染，可在窗口显示渲染结果
 
 import gymnasium as gym
@@ -8,6 +9,7 @@ from .... import panda_mujoco_gym  # 注册环境
 from stable_baselines3.common.vec_env import DummyVecEnv
 import time  # 用于控制渲染帧率
 
+
 # 自定义包装器（与训练一致）
 class TerminateOnTruncatedWrapper(gym.Wrapper):
     def step(self, action):
@@ -16,11 +18,15 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
             terminated = True
         return obs, reward, terminated, truncated, info
 
+
 # 创建与训练完全一致的环境，添加 render_mode 参数
 def make_env(reward_type="dense"):
-    env = gym.make("FrankaPickAndPlaceDense-v0", reward_type=reward_type, render_mode="human")
+    env = gym.make(
+        "FrankaPickAndPlaceDense-v0", reward_type=reward_type, render_mode="human"
+    )
     env = TerminateOnTruncatedWrapper(env)
     return env
+
 
 # 创建测试环境（必须使用 DummyVecEnv）
 test_env = DummyVecEnv([lambda: make_env()])
@@ -67,7 +73,7 @@ for episode in range(n_episodes):
         # 解析 info（VecEnv 返回列表）
         if isinstance(info, list):
             info = info[0]
-        if info.get('is_success', False):
+        if info.get("is_success", False):
             episode_success = True
 
     if episode_success:

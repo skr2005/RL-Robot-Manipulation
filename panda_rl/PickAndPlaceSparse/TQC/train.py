@@ -11,7 +11,9 @@ import wandb
 import numpy as np
 
 from .... import panda_mujoco_gym  # 注册环境
+
 print(panda_mujoco_gym.__file__)
+
 
 # 自定义包装器
 class TerminateOnTruncatedWrapper(gym.Wrapper):
@@ -20,6 +22,7 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
         if truncated:
             terminated = True
         return obs, reward, terminated, truncated, info
+
 
 # # 注册环境
 # if "FrankaPickAndPlaceSparse-v0" not in gym.envs.registry:
@@ -30,7 +33,13 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
 #     )
 
 reward_type = "sparse"
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type))])
+env = DummyVecEnv(
+    [
+        lambda: TerminateOnTruncatedWrapper(
+            gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type)
+        )
+    ]
+)
 
 # 初始化 wandb
 run = wandb.init(
@@ -44,12 +53,15 @@ run = wandb.init(
         "learning_starts": 2000,
         "policy_kwargs": {"net_arch": [256, 256, 256], "n_critics": 2},
         "replay_buffer_class": "HerReplayBuffer",
-        "replay_buffer_kwargs": {"n_sampled_goal": 4, "goal_selection_strategy": "future"},
+        "replay_buffer_kwargs": {
+            "n_sampled_goal": 4,
+            "goal_selection_strategy": "future",
+        },
         "tau": 0.05,
         "gamma": 0.95,
         "verbose": 1,
-        "top_quantiles_to_drop_per_net": 2
-    }
+        "top_quantiles_to_drop_per_net": 2,
+    },
 )
 
 model = TQC(
@@ -65,7 +77,7 @@ model = TQC(
     tau=0.05,
     gamma=0.95,
     verbose=1,
-    top_quantiles_to_drop_per_net=2
+    top_quantiles_to_drop_per_net=2,
 )
 
 
@@ -87,19 +99,31 @@ class CustomEvalCallback(EvalCallback):
             for episode_data in self.evaluations_results[-1]:
                 _, episode_infos = episode_data
                 if len(episode_infos) > 0:
-                    success = episode_infos[-1].get('is_success', False)
+                    success = episode_infos[-1].get("is_success", False)
                     successes.append(success)
 
             if len(successes) > 0:
                 success_rate = np.mean(successes)
-                wandb.log({
-                    "eval/success_rate": success_rate,
-                    "global_step": self.num_timesteps
-                })
+                wandb.log(
+                    {
+                        "eval/success_rate": success_rate,
+                        "global_step": self.num_timesteps,
+                    }
+                )
 
         return result
 
-eval_env = DummyVecEnv([lambda: Monitor(TerminateOnTruncatedWrapper(gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type)), "./eval_logs")])
+
+eval_env = DummyVecEnv(
+    [
+        lambda: Monitor(
+            TerminateOnTruncatedWrapper(
+                gym.make("FrankaPickAndPlaceSparse-v0", reward_type=reward_type)
+            ),
+            "./eval_logs",
+        )
+    ]
+)
 eval_callback = CustomEvalCallback(
     eval_env,
     best_model_save_path="./best_model/",
@@ -112,7 +136,7 @@ eval_callback = CustomEvalCallback(
 model.learn(
     total_timesteps=500_000,
     callback=eval_callback,
-    tb_log_name="tqc_franka_pick_and_place_sparse"
+    tb_log_name="tqc_franka_pick_and_place_sparse",
 )
 model.save("tqc_franka_pick_and_place_sparse_final")
 run.finish()

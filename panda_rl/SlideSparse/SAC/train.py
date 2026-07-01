@@ -34,7 +34,13 @@ class TerminateOnTruncatedWrapper(gym.Wrapper):
 reward_type = "sparse"  # 根据实际情况设置 reward_type 的值
 
 # 使用包装器包装环境
-env = DummyVecEnv([lambda: TerminateOnTruncatedWrapper(gym.make("FrankaSlideSparse-v0", reward_type=reward_type))])
+env = DummyVecEnv(
+    [
+        lambda: TerminateOnTruncatedWrapper(
+            gym.make("FrankaSlideSparse-v0", reward_type=reward_type)
+        )
+    ]
+)
 
 # 初始化 wandb
 run = wandb.init(
@@ -47,12 +53,15 @@ run = wandb.init(
         "batch_size": 2048,
         "policy_kwargs": {"net_arch": [512, 512, 512]},
         "replay_buffer_class": "HerReplayBuffer",
-        "replay_buffer_kwargs": {"n_sampled_goal": 4, "goal_selection_strategy": "future"},
+        "replay_buffer_kwargs": {
+            "n_sampled_goal": 4,
+            "goal_selection_strategy": "future",
+        },
         "tau": 0.05,
         "gamma": 0.95,
         "verbose": 1,
-        "ent_coef": 'auto'
-    }
+        "ent_coef": "auto",
+    },
 )
 
 model = SAC(
@@ -70,7 +79,7 @@ model = SAC(
     tau=0.05,
     gamma=0.95,
     verbose=1,
-    ent_coef='auto'
+    ent_coef="auto",
 )
 
 
@@ -92,21 +101,32 @@ class CustomEvalCallback(EvalCallback):
             for episode_data in self.evaluations_results[-1]:
                 _, episode_infos = episode_data
                 if len(episode_infos) > 0:
-                    success = episode_infos[-1].get('is_success', False)
+                    success = episode_infos[-1].get("is_success", False)
                     successes.append(success)
 
             if len(successes) > 0:
                 success_rate = np.mean(successes)
-                wandb.log({
-                    "eval/success_rate": success_rate,
-                    "global_step": self.num_timesteps
-                })
+                wandb.log(
+                    {
+                        "eval/success_rate": success_rate,
+                        "global_step": self.num_timesteps,
+                    }
+                )
 
         return result
 
+
 # 创建评估回调
-eval_env = DummyVecEnv([lambda: Monitor(
-    TerminateOnTruncatedWrapper(gym.make("FrankaSlideSparse-v0", reward_type=reward_type)), "./eval_logs")])
+eval_env = DummyVecEnv(
+    [
+        lambda: Monitor(
+            TerminateOnTruncatedWrapper(
+                gym.make("FrankaSlideSparse-v0", reward_type=reward_type)
+            ),
+            "./eval_logs",
+        )
+    ]
+)
 
 eval_callback = EvalCallback(
     eval_env,
@@ -121,7 +141,7 @@ eval_callback = EvalCallback(
 model.learn(
     total_timesteps=1000000,
     callback=eval_callback,
-    tb_log_name="sac_franka_slide_sparse"
+    tb_log_name="sac_franka_slide_sparse",
 )
 
 # 保存最终模型

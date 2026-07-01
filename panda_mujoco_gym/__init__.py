@@ -10,6 +10,7 @@ for task in ["Slide", "Push", "PickAndPlace"]:
         env_id = f"Franka{task}{reward_suffix}-v0"
 
         from . import envs
+
         fn = getattr(envs, f"Franka{task}Env")
 
         register(

@@ -43,7 +43,9 @@ class FrankaEnv(MujocoRobotEnv):
 
         self.reward_type = reward_type
 
-        self.neutral_joint_values = np.array([0.00, 0.41, 0.00, -1.85, 0.00, 2.26, 0.79, 0.00, 0.00])
+        self.neutral_joint_values = np.array(
+            [0.00, 0.41, 0.00, -1.85, 0.00, 2.26, 0.79, 0.00, 0.00]
+        )
 
         super().__init__(
             n_actions=action_size,
@@ -62,10 +64,22 @@ class FrankaEnv(MujocoRobotEnv):
         self.goal_x_offset = goal_x_offset
         self.goal_z_range = goal_z_range
 
-        self.goal_range_low = np.array([-self.goal_xy_range / 2 + goal_x_offset, -self.goal_xy_range / 2, 0])
-        self.goal_range_high = np.array([self.goal_xy_range / 2 + goal_x_offset, self.goal_xy_range / 2, self.goal_z_range])
-        self.obj_range_low = np.array([-self.obj_xy_range / 2, -self.obj_xy_range / 2, 0])
-        self.obj_range_high = np.array([self.obj_xy_range / 2, self.obj_xy_range / 2, 0])
+        self.goal_range_low = np.array(
+            [-self.goal_xy_range / 2 + goal_x_offset, -self.goal_xy_range / 2, 0]
+        )
+        self.goal_range_high = np.array(
+            [
+                self.goal_xy_range / 2 + goal_x_offset,
+                self.goal_xy_range / 2,
+                self.goal_z_range,
+            ]
+        )
+        self.obj_range_low = np.array(
+            [-self.obj_xy_range / 2, -self.obj_xy_range / 2, 0]
+        )
+        self.obj_range_high = np.array(
+            [self.obj_xy_range / 2, self.obj_xy_range / 2, 0]
+        )
 
         self.goal_range_low[0] += 0.6
         self.goal_range_high[0] += 0.6
@@ -109,14 +123,18 @@ class FrankaEnv(MujocoRobotEnv):
 
         self._mujoco.mj_forward(self.model, self.data)
 
-        self.initial_mocap_position = self._utils.get_site_xpos(self.model, self.data, "ee_center_site").copy()
+        self.initial_mocap_position = self._utils.get_site_xpos(
+            self.model, self.data, "ee_center_site"
+        ).copy()
         self.grasp_site_pose = self.get_ee_orientation().copy()
 
         self.set_mocap_pose(self.initial_mocap_position, self.grasp_site_pose)
 
         self._mujoco_step()
 
-        self.initial_object_height = self._utils.get_joint_qpos(self.model, self.data, "obj_joint")[2].copy()
+        self.initial_object_height = self._utils.get_joint_qpos(
+            self.model, self.data, "obj_joint"
+        )[2].copy()
 
     def step(self, action) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         if np.array(action).shape != self.action_space.shape:
@@ -156,7 +174,9 @@ class FrankaEnv(MujocoRobotEnv):
             pos_ctrl, gripper_ctrl = action[:3], action[3]
             fingers_ctrl = gripper_ctrl * 0.2
             fingers_width = self.get_fingers_width().copy() + fingers_ctrl
-            fingers_half_width = np.clip(fingers_width / 2, self.ctrl_range[-1, 0], self.ctrl_range[-1, 1])
+            fingers_half_width = np.clip(
+                fingers_width / 2, self.ctrl_range[-1, 0], self.ctrl_range[-1, 1]
+            )
 
         elif self.block_gripper:
             pos_ctrl = action
@@ -174,25 +194,40 @@ class FrankaEnv(MujocoRobotEnv):
 
     def _get_obs(self) -> dict:
         # robot
-        ee_position = self._utils.get_site_xpos(self.model, self.data, "ee_center_site").copy()
+        ee_position = self._utils.get_site_xpos(
+            self.model, self.data, "ee_center_site"
+        ).copy()
 
-        ee_velocity = self._utils.get_site_xvelp(self.model, self.data, "ee_center_site").copy() * self.dt
+        ee_velocity = (
+            self._utils.get_site_xvelp(self.model, self.data, "ee_center_site").copy()
+            * self.dt
+        )
 
         if not self.block_gripper:
             fingers_width = self.get_fingers_width().copy()
 
         # object
         # object cartesian position: 3
-        object_position = self._utils.get_site_xpos(self.model, self.data, "obj_site").copy()
+        object_position = self._utils.get_site_xpos(
+            self.model, self.data, "obj_site"
+        ).copy()
 
         # object rotations: 3
-        object_rotation = rotations.mat2euler(self._utils.get_site_xmat(self.model, self.data, "obj_site")).copy()
+        object_rotation = rotations.mat2euler(
+            self._utils.get_site_xmat(self.model, self.data, "obj_site")
+        ).copy()
 
         # object linear velocities
-        object_velp = self._utils.get_site_xvelp(self.model, self.data, "obj_site").copy() * self.dt
+        object_velp = (
+            self._utils.get_site_xvelp(self.model, self.data, "obj_site").copy()
+            * self.dt
+        )
 
         # object angular velocities
-        object_velr = self._utils.get_site_xvelr(self.model, self.data, "obj_site").copy() * self.dt
+        object_velr = (
+            self._utils.get_site_xvelr(self.model, self.data, "obj_site").copy()
+            * self.dt
+        )
 
         if not self.block_gripper:
             obs = {
@@ -264,7 +299,9 @@ class FrankaEnv(MujocoRobotEnv):
             for i in range(model.eq_data.shape[0]):
                 if model.eq_type[i] == mujoco.mjtEq.mjEQ_WELD:
                     # relative pose
-                    model.eq_data[i, 3:10] = np.array([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0])
+                    model.eq_data[i, 3:10] = np.array(
+                        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]
+                    )
         self._mujoco.mj_forward(model, data)
 
     def goal_distance(self, goal_a, goal_b) -> SupportsFloat:
@@ -281,7 +318,9 @@ class FrankaEnv(MujocoRobotEnv):
             self._utils.set_joint_qpos(self.model, self.data, name, value)
 
         # assign value to finger joints
-        for name, value in zip(self.gripper_joint_names, self.neutral_joint_values[7:9]):
+        for name, value in zip(
+            self.gripper_joint_names, self.neutral_joint_values[7:9]
+        ):
             self._utils.set_joint_qpos(self.model, self.data, name, value)
 
     def _sample_goal(self) -> np.ndarray:
@@ -302,7 +341,9 @@ class FrankaEnv(MujocoRobotEnv):
         self._utils.set_joint_qpos(self.model, self.data, "obj_joint", object_xpos)
 
     def get_ee_orientation(self) -> np.ndarray:
-        site_mat = self._utils.get_site_xmat(self.model, self.data, "ee_center_site").reshape(9, 1)
+        site_mat = self._utils.get_site_xmat(
+            self.model, self.data, "ee_center_site"
+        ).reshape(9, 1)
         current_quat = np.empty(4)
         self._mujoco.mju_mat2Quat(current_quat, site_mat)
         return current_quat

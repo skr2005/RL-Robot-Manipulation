@@ -1,4 +1,5 @@
 import os
+
 os.environ["MUJOCO_GL"] = "glfw"  # Use glfw rendering for windowed display
 
 import gymnasium as gym
