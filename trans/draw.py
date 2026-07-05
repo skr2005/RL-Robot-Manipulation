@@ -15,18 +15,11 @@ def read_csv_xy(csv_path: Path):
         next(reader, None)
         for row in reader:
             if not row or len(row) < 2:
-                continue
-            try:
-                tx = int(float(row[0]))
-                sy = float(row[1])
-            except Exception:
-                continue
-            if sy > 1.0 and sy <= 100.0:
-                sy = sy / 100.0
-            elif sy > 100.0:
-                sy = 1.0
-            if sy < 0.0:
-                sy = 0.0
+                raise TypeError
+            tx = int(float(row[0]))
+            sy = float(row[1])
+            if sy > 1.0 or sy < 0:
+                raise TypeError
             x.append(tx)
             y.append(sy)
     return x, y
