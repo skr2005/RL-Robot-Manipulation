@@ -44,8 +44,8 @@ Our results:
 
 | Environment                   | TQC+HER | SAC+HER |
 | ----------------------------- | ------- | ------- |
-| FrankaPushSparse - v0         | 100%    | 93%    |
-| FrankaPushDense - v0          | 100% ?? | 0%      |
+| FrankaPushSparse - v0         | 100%    | 93%     |
+| FrankaPushDense - v0          | 93%     | 0%      |
 | FrankaSlideSparse - v0        | 0%      | 0%      |
 | FrankaSlideDense - v0         | 0%      | 0%      |
 | FrankaPickAndPlaceSparse - v0 | 27%     | 0%      |
